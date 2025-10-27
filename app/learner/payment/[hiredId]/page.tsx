@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useSearchParams } from "next/navigation"
 import { EmbeddedCheckout, EmbeddedCheckoutProvider } from "@stripe/react-stripe-js"
 import { loadStripe } from "@stripe/stripe-js"
@@ -22,14 +22,19 @@ export default function PaymentPage({
   const [error, setError] = useState<string | null>(null)
   const [teacherId, setTeacherId] = useState<string | null>(null)
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  )
+  const supabaseRef = useRef<any | null>(null)
 
   useEffect(() => {
+    supabaseRef.current = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+    )
+
     const initializeCheckout = async () => {
       try {
+        const supabase = supabaseRef.current
+        if (!supabase) throw new Error("Supabase client not initialized")
+
         // Get hired record to find teacher
         const { data: hired, error: hiredError } = await supabase
           .from("hired")
@@ -52,7 +57,8 @@ export default function PaymentPage({
     }
 
     initializeCheckout()
-  }, [params.hiredId, packageId, supabase])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.hiredId, packageId])
 
   if (loading) {
     return (

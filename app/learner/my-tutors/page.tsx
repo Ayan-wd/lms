@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { createBrowserClient } from "@supabase/ssr"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -11,14 +11,19 @@ export default function MyTutorsPage() {
   const [hiredTeachers, setHiredTeachers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  )
+  const supabaseRef = useRef<any | null>(null)
 
   useEffect(() => {
+    supabaseRef.current = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+    )
+
     const fetchHiredTeachers = async () => {
       try {
+        const supabase = supabaseRef.current
+        if (!supabase) return
+
         const {
           data: { user },
         } = await supabase.auth.getUser()
@@ -45,7 +50,8 @@ export default function MyTutorsPage() {
     }
 
     fetchHiredTeachers()
-  }, [supabase])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   if (loading) {
     return (

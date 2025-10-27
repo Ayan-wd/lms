@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { createBrowserClient } from "@supabase/ssr"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -16,14 +16,19 @@ export default function TeacherPaymentsPage() {
     completedPayments: 0,
   })
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  )
+  const supabaseRef = useRef<any | null>(null)
 
   useEffect(() => {
+    supabaseRef.current = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+    )
+
     const fetchPayments = async () => {
       try {
+        const supabase = supabaseRef.current
+        if (!supabase) throw new Error("Not initialized")
+
         const {
           data: { user },
         } = await supabase.auth.getUser()
@@ -47,9 +52,9 @@ export default function TeacherPaymentsPage() {
         setPayments(data || [])
 
         // Calculate stats
-        const totalEarnings = data?.reduce((sum, p) => (p.status === "completed" ? sum + p.amount : sum), 0) || 0
-        const pendingPayments = data?.filter((p) => p.status === "pending").length || 0
-        const completedPayments = data?.filter((p) => p.status === "completed").length || 0
+  const totalEarnings = data?.reduce((sum: number, p: any) => (p.status === "completed" ? sum + p.amount : sum), 0) || 0
+  const pendingPayments = data?.filter((p: any) => p.status === "pending").length || 0
+  const completedPayments = data?.filter((p: any) => p.status === "completed").length || 0
 
         setStats({
           totalEarnings,
@@ -65,7 +70,8 @@ export default function TeacherPaymentsPage() {
     }
 
     fetchPayments()
-  }, [supabase])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   if (loading) {
     return (

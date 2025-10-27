@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { createBrowserClient } from "@supabase/ssr"
 import { Button } from "@/components/ui/button"
@@ -18,14 +18,19 @@ export default function HireTeacherPage({
   const [error, setError] = useState<string | null>(null)
   const [selectedPackage, setSelectedPackage] = useState<string>("starter-5h")
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  )
+  const supabaseRef = useRef<any | null>(null)
 
   useEffect(() => {
+    supabaseRef.current = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+    )
+
     const fetchTeacher = async () => {
       try {
+        const supabase = supabaseRef.current
+        if (!supabase) return
+
         const { data, error } = await supabase
           .from("teachers")
           .select("*, users(first_name, last_name, profile_image_url, bio)")
@@ -43,11 +48,15 @@ export default function HireTeacherPage({
     }
 
     fetchTeacher()
-  }, [params.teacherId, supabase])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.teacherId])
 
   const handleHireTeacher = async () => {
     try {
       setLoading(true)
+
+      const supabase = supabaseRef.current
+      if (!supabase) throw new Error('Supabase client not initialized')
 
       // Get current user
       const {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { redirect } from "next/navigation"
 import { createBrowserClient } from "@supabase/ssr"
 import { Button } from "@/components/ui/button"
@@ -21,14 +21,19 @@ export default function TeacherProfilePage() {
     years_experience: "",
   })
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  )
+  const supabaseRef = useRef<any | null>(null)
 
   useEffect(() => {
+    supabaseRef.current = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+    )
+
     const fetchProfile = async () => {
       try {
+        const supabase = supabaseRef.current
+        if (!supabase) return
+
         const {
           data: { user: authUser },
         } = await supabase.auth.getUser()
@@ -55,11 +60,15 @@ export default function TeacherProfilePage() {
     }
 
     fetchProfile()
-  }, [supabase])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleSave = async () => {
     try {
       setSaving(true)
+      const supabase = supabaseRef.current
+      if (!supabase) throw new Error('Supabase client not initialized')
+
       const {
         data: { user: authUser },
       } = await supabase.auth.getUser()
