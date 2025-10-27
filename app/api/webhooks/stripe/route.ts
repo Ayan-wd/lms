@@ -3,7 +3,22 @@ import { createClient } from "@/lib/server"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY
+
+// For development/build time checks
+if (!STRIPE_WEBHOOK_SECRET || !STRIPE_SECRET_KEY) {
+  console.warn('⚠️ Stripe configuration missing. Webhook endpoints will return 503 in production.')
+}
+
 export async function POST(request: Request) {
+  // Return 503 Service Unavailable if Stripe is not configured
+  if (process.env.NODE_ENV === 'production' && (!STRIPE_WEBHOOK_SECRET || !STRIPE_SECRET_KEY)) {
+    return NextResponse.json(
+      { error: 'Stripe configuration missing' },
+      { status: 503 }
+    )
+  }
   const body = await request.text()
   const headersList = await headers()
   const signature = headersList.get("stripe-signature")

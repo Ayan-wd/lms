@@ -20,7 +20,8 @@ export function AdminStats({ users, lessons, payments }: AdminStatsProps) {
     })
     .reduce((sum, p) => sum + (p.amount || 0), 0)
 
-  const growth = lastMonthRevenue > 0 ? (((totalRevenue - lastMonthRevenue) / lastMonthRevenue) * 100).toFixed(1) : 0
+  const growthValue = lastMonthRevenue > 0 ? (((totalRevenue - lastMonthRevenue) / lastMonthRevenue) * 100) : 0
+  const growth = typeof growthValue === 'number' ? growthValue.toFixed(1) : '0'
 
   const stats = [
     {
@@ -43,7 +44,7 @@ export function AdminStats({ users, lessons, payments }: AdminStatsProps) {
     },
     {
       title: "Growth",
-      value: `${growth > 0 ? "+" : ""}${growth}%`,
+      value: `${growthValue > 0 ? "+" : ""}${growth}%`,
       icon: TrendingUp,
       color: "text-orange-500",
     },

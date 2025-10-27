@@ -26,8 +26,9 @@ export function EarningsCard({ payments }: EarningsCardProps) {
     })
     .reduce((sum, p) => sum + (p.amount || 0), 0)
 
-  const percentChange =
-    lastMonthEarnings > 0 ? (((monthlyEarnings - lastMonthEarnings) / lastMonthEarnings) * 100).toFixed(1) : 0
+  const percentChangeValue =
+    lastMonthEarnings > 0 ? ((monthlyEarnings - lastMonthEarnings) / lastMonthEarnings) * 100 : 0
+  const percentChange = typeof percentChangeValue === 'number' ? percentChangeValue.toFixed(1) : '0'
 
   return (
     <Card className="border-border">
@@ -45,7 +46,7 @@ export function EarningsCard({ payments }: EarningsCardProps) {
         <div className="flex items-center gap-2 text-sm text-green-600">
           <TrendingUp className="w-4 h-4" />
           <span>
-            {percentChange > 0 ? "+" : ""}
+            {percentChangeValue > 0 ? "+" : ""}
             {percentChange}% from last month
           </span>
         </div>

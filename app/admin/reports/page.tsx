@@ -1,8 +1,10 @@
-import { redirect } from "next/navigation"
-import { createClient } from "@/lib/server"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/server'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+
+// Import the client-side chart component
+import { RevenueChart } from '@/components/charts/revenue-chart'
 
 export default async function AdminReports() {
   const supabase = await createClient()
@@ -21,16 +23,16 @@ export default async function AdminReports() {
     redirect("/")
   }
 
-  const { data: payments } = await supabase.from("payments").select("*")
+  const { data: payments } = await supabase.from('payments').select('*')
 
   // Generate monthly revenue data
   const monthlyData = [
-    { month: "Jan", revenue: 4000, lessons: 24 },
-    { month: "Feb", revenue: 3000, lessons: 13 },
-    { month: "Mar", revenue: 2000, lessons: 9 },
-    { month: "Apr", revenue: 2780, lessons: 39 },
-    { month: "May", revenue: 1890, lessons: 23 },
-    { month: "Jun", revenue: 2390, lessons: 34 },
+    { month: 'Jan', revenue: 4000, lessons: 24 },
+    { month: 'Feb', revenue: 3000, lessons: 13 },
+    { month: 'Mar', revenue: 2000, lessons: 9 },
+    { month: 'Apr', revenue: 2780, lessons: 39 },
+    { month: 'May', revenue: 1890, lessons: 23 },
+    { month: 'Jun', revenue: 2390, lessons: 34 },
   ]
 
   return (
@@ -48,19 +50,9 @@ export default async function AdminReports() {
               <CardTitle>Monthly Revenue</CardTitle>
               <CardDescription>Platform revenue over the last 6 months</CardDescription>
             </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="revenue" fill="#3b82f6" />
-                  <Bar dataKey="lessons" fill="#10b981" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
+              <CardContent>
+                <RevenueChart data={monthlyData} />
+              </CardContent>
           </Card>
 
           {/* Export Options */}
