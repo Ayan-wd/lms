@@ -5,10 +5,9 @@ import { createServerClient } from "@supabase/ssr";
 
 export async function middleware(request: NextRequest) {
   try {
-    // Prepare response
     let response = NextResponse.next({ request });
 
-    // Create Supabase client (Node runtime-safe)
+    // Initialize Supabase client safely for Node runtime
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -26,15 +25,15 @@ export async function middleware(request: NextRequest) {
       }
     );
 
-    // Check user
+    // Get currently logged-in user
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
-    // Protect routes
-    const protectedRoutes = ["/learner", "/teacher", "/admin"];
-    const needsAuth = protectedRoutes.some((path) =>
-      request.nextUrl.pathname.startsWith(path)
+    // Routes requiring login
+    const protectedPaths = ["/learner", "/teacher", "/admin"];
+    const needsAuth = protectedPaths.some((p) =>
+      request.nextUrl.pathname.startsWith(p)
     );
 
     if (needsAuth && !user) {
@@ -43,9 +42,9 @@ export async function middleware(request: NextRequest) {
     }
 
     return response;
-  } catch (err) {
-    console.error("🔥 Middleware error:", err);
-    return new NextResponse("Middleware failed", { status: 500 });
+  } catch (error) {
+    console.error("❌ Middleware crashed:", error);
+    return new NextResponse("Middleware crashed", { status: 500 });
   }
 }
 
