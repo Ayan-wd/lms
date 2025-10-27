@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { createBrowserClient } from "@supabase/ssr"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -12,14 +12,21 @@ export default function ApprovalsPage() {
   const [loading, setLoading] = useState(true)
   const [approving, setApproving] = useState<string | null>(null)
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  )
+  // Create the browser Supabase client inside useEffect so it only runs in the
+  // browser at runtime (avoids calling it during prerender/build on Vercel).
+  const supabaseRef = useRef<any | null>(null)
 
   useEffect(() => {
+    supabaseRef.current = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+    )
+
     const fetchPendingTeachers = async () => {
       try {
+        const supabase = supabaseRef.current
+        if (!supabase) return
+
         const { data, error } = await supabase
           .from("teachers")
           .select("*, users(first_name, last_name, email, bio)")
@@ -36,11 +43,16 @@ export default function ApprovalsPage() {
     }
 
     fetchPendingTeachers()
-  }, [supabase])
+    // We only want this to run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleApprove = async (teacherId: string) => {
     try {
       setApproving(teacherId)
+      const supabase = supabaseRef.current
+      if (!supabase) throw new Error('Supabase client not initialized')
+
       await supabase
         .from("teachers")
         .update({
@@ -61,6 +73,9 @@ export default function ApprovalsPage() {
   const handleReject = async (teacherId: string) => {
     try {
       setApproving(teacherId)
+      const supabase = supabaseRef.current
+      if (!supabase) throw new Error('Supabase client not initialized')
+
       // Delete teacher record
       await supabase.from("teachers").delete().eq("id", teacherId)
 
